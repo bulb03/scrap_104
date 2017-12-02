@@ -1,4 +1,5 @@
-
+#Documents：網頁在server端生成
+#XHR：網頁用JS生成
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import requests
@@ -8,25 +9,29 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 
+"""要攻克的難點：如何抓到轉了好幾頁的網頁原始碼並從中得到我想要的
+	要嘛就要wd.get(url)的url是各個職業的單一頁面(但這很智障)
+	要嘛就想辦法透過現在的程式碼爬"""
+
 url = "https://www.104.com.tw/"
 url1 = "https://www.104.com.tw/jobs/search/?ro=0&keyword=%E8%81%B7%E5%8B%99%E3%80%81%E6%8A%80%E8%83%BD%E3%80%81%E8%AA%9E%E8%A8%80%E5%8D%8A%E5%B0%8E%E9%AB%94%E5%B7%A5%E7%A8%8B%E5%B8%AB&order=7&asc=0&kwop=7&page=1&mode=s&jobsource=n104bank1"
-url2 = "https://www.104.com.tw/job/?jobno=4ymvm&jobsource=hotjob_chr"
+url2 = "https://www.104.com.tw/job/?jobno=33jbd&jobsource=n104bank1"
 # 啟動想起動的瀏覽器 #注意：根據你想啟動的瀏覽器，除了webdrive.瀏覽器名()不一樣外，你也要到selenium去下載和欲開啟的瀏覽器相關的檔案
 #wd = webdriver.Edge()
 wd = webdriver.Firefox()
-
 # 連上想連的網站，跟requests.get的功能一樣
-wd.get(url2)
+wd.get(url)
 
-"""
+
 #輸入欲查詢職業
 time.sleep(1)
 #search = input("請輸入欲查詢職稱:")
-search = "半導體工程師"
+
+search = "網頁設計師"
 data = wd.find_element_by_xpath("//*[@id='ikeyword']")
 data.clear()
 data.send_keys(search)
-
+"""
 #輸入地區
 list = []
 wd.find_element_by_xpath("/html/body/div[3]/div[2]/form[2]/div[1]/div[1]/div[1]/div[2]/div[2]/div[2]").click()
@@ -70,12 +75,12 @@ while multi_-1:
 		#/html/body/div[5]/div[3]/div/ul/li[1]/a
 		multi_2 = input("繼續輸入?1.否 2.是")
 	mult_ = input("繼續輸入?1.否 2.是")
-
+"""
 #點擊搜尋
 time.sleep(1)
 search = wd.find_element_by_xpath("/html/body/div[3]/div[2]/form[2]/div[1]/div[1]/div[1]/div[2]/div[2]/div[4]/input")
 search.click()
-
+"""
 
 #選擇相關性排序、日期、...
 time.sleep(1)
@@ -208,16 +213,45 @@ if int(choose) == 1:
 
 	#點擊確認
 	wd.find_element_by_xpath("//*[@id='js-salary-send']").click()"""
-
-#查到的項目點擊是抓a(超連結)
-#wd.find_element_by_xpath("/html/body/main/div[3]/div/div[4]/div[4]/article[1]/div[1]/h2/a").click()
-no = wd.execute_script("return document.documentElement.outerHTML")
+n = 1
+wd.find_element_by_xpath("/html/body/main/div[3]/div/div[4]/div[4]/article["+str(n)+"]/div[1]/h2/a").click()
+no = wd.execute_script("return document.documentElement.outerHTML") #這也是一樣，抓的是首頁的js
 no_renew = BeautifulSoup(no,"html.parser")
+#print(no_renew.prettify())
+
 data= no_renew.findAll('div', {'class': 'grid-left'})
+
 text = data[0].main.section.div.p.get_text() #這方法挺爛的，不知道有沒有更好的；而且還不能指定第幾個div
 print(text)
-text2 = data[0].main.section.div.dt.dd.get_text()
+text2 = data[0].main.findAll('section').findAll('div').findAll('dl').findAll('dd',{'class':'tool'})
 print(text2)
 
+"""
+#這種方法只能爬wd.get(url)裡的url的原始碼
+#查到的項目點擊是抓a(超連結)
+n = 1
+while n<10:
+	wd.find_element_by_xpath("/html/body/main/div[3]/div/div[4]/div[4]/article["+str(n)+"]/div[1]/h2/a").click()
+	no_renew = BeautifulSoup(wd2.page_source,"html.parser")
+	for i in no_renew.select('.grid-left .main .info .content p'):
+		time.sleep(1)
+		print(i.text)
+		break
+	time.sleep(1)
+	if no_renew.select('.grid-left .main .info .content dl .tool a'):
+		for i in no_renew.select('.grid-left .main .info .content dl .tool a'):
+			print(i.text)
+	else:
+		for i in no_renew.select('.grid-left .main .info .content dl .tool'):
+			print(i.text)
+	print("=========================================================")
+	n+=1
+	time.sleep(2)
+"""
 
+"""no = wd.execute_script("return document.documentElement.outerHTML")
+no_renew = BeautifulSoup(no,"html.parser")
+print(no_renew.prettify())#根據這印出來的東西，發現我們抓的根本不是個別的頁面，而是首頁
+之前可以抓到的原因是：requests.get(url2)的url2是個別的頁面，也就是說，必須要換個方式，不然只能抓到首頁
+"""
 #/html/body/main/div[3]/div/div[4]/div[4]/article[n]/div[1]/h2/a -> n是第n個找到的項目
